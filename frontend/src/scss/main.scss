@@ -1,0 +1,13 @@
+// Custom SCSS
+// Option A: Include all of Bootstrap
+
+// Override Bootstrap variables BEFORE importing
+
+
+@import "bootstrap/scss/bootstrap"; // ✅ Correct way to import Bootstrap
+
+// Then add additional custom styles
+
+body{
+    background-color: #276db4;
+}
