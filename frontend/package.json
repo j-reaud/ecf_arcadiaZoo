@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "parcel public/index.html --open",
+    "start": "parcel public/index.html --port 1234 --open",
     "build": "parcel build public/index.html"
   },
   "keywords": [],
@@ -13,7 +13,8 @@
   "type": "module",
   "description": "Frontend for the Arcadia Zoo project",
   "dependencies": {
-    "bootstrap": "^5.3.3"
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.1"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.13.3",

@@ -1,6 +1,6 @@
 import Route from "./route.js";
 import { allRoutes, websiteName } from "./allRoutes.js";
-import { isConnected, getRole, showAndHideElementsForRoles } from "./auth.js";  // Adjust path if needed
+// import { isConnected, getRole, showAndHideElementsForRoles } from "./auth.js";  // Uncomment if needed
 
 // Route 404 (page introuvable)
 const route404 = new Route("404", "Page introuvable", "/pages/404.html", []);
@@ -23,15 +23,17 @@ const LoadContentPage = async () => {
   const path = window.location.pathname;
   const actualRoute = getRouteByUrl(path);
 
+  console.log(`🚀 Trying to load: ${actualRoute.pathHtml}`);
+  console.log(`Current URL: ${window.location.pathname}`);
+
   // Vérifier les droits d'accès
-  const allRolesArray = actualRoute.authorize;
-  if (allRolesArray.length > 0) {
-    if (allRolesArray.includes("disconnected") && isConnected()) {
+  if (actualRoute.authorize.length > 0) { 
+    if (actualRoute.authorize.includes("disconnected") && isConnected()) {
       window.location.replace("/");
       return;
     } else {
       const roleUser = getRole();
-      if (!allRolesArray.includes(roleUser)) {
+      if (!actualRoute.authorize.includes(roleUser)) {
         window.location.replace("/");
         return;
       }
@@ -39,14 +41,23 @@ const LoadContentPage = async () => {
   }
 
   // Charger le contenu HTML de la page
-  const html = await fetch(actualRoute.pathHtml).then(res => res.text());
-  document.getElementById("main-page").innerHTML = html;
+  try {
+    const response = await fetch(actualRoute.pathHtml);
+    if (!response.ok) throw new Error(`❌ Fetch failed: ${actualRoute.pathHtml}`);
+
+    const html = await response.text();
+    console.log(`✅ Fetched content for: ${actualRoute.pathHtml}`, html);
+    document.getElementById("main-page").innerHTML = html;
+  } catch (error) {
+    console.error("❌ Error loading page:", error);
+    document.getElementById("main-page").innerHTML = "<h2>Page not found</h2>";
+  }
 
   // Assurer un délai avant d'injecter le script
   setTimeout(() => {
     if (actualRoute.pathJS) {
       removeOldScript();
-      var scriptTag = document.createElement("script");
+      const scriptTag = document.createElement("script");
       scriptTag.setAttribute("type", "text/javascript");
       scriptTag.setAttribute("src", actualRoute.pathJS);
       scriptTag.setAttribute("id", "dynamic-script");
@@ -58,9 +69,9 @@ const LoadContentPage = async () => {
   document.title = actualRoute.title + " - " + websiteName;
 
   // Afficher et masquer les éléments en fonction du rôle
-  showAndHideElementsForRoles();
+  // showAndHideElementsForRoles();
 
-  // Activer la navigation interne
+  // Activer la navigation interne après le chargement
   setTimeout(enableInternalLinks, 100);
 };
 
@@ -75,7 +86,7 @@ const routeEvent = (event) => {
 // Attacher les événements aux liens internes
 const enableInternalLinks = () => {
   document.querySelectorAll("a").forEach(link => {
-    if (link.getAttribute("href").startsWith("/")) {
+    if (link.getAttribute("href") && link.getAttribute("href").startsWith("/")) {
       link.addEventListener("click", routeEvent);
     }
   });
@@ -85,4 +96,8 @@ const enableInternalLinks = () => {
 window.onpopstate = LoadContentPage;
 
 // Charger la première page au démarrage
-LoadContentPage();
+document.addEventListener("DOMContentLoaded", LoadContentPage);
+
+window.route = routeEvent;
+console.log("✅ Routing is enabled!");
+
